@@ -1,4 +1,4 @@
-# Retry [![Build Status](https://api.travis-ci.com/xgfone/go-retry.svg?branch=master)](https://travis-ci.com/github/xgfone/go-retry) [![GoDoc](https://pkg.go.dev/badge/github.com/xgfone/go-retry)](https://pkg.go.dev/github.com/xgfone/go-retry) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://raw.githubusercontent.com/xgfone/go-retry/master/LICENSE)
+# Retry [![Build Status](https://github.com/xgfone/go-retry/actions/workflows/go.yml/badge.svg)](https://github.com/xgfone/go-retry/actions/workflows/go.yml) [![GoDoc](https://pkg.go.dev/badge/github.com/xgfone/go-retry)](https://pkg.go.dev/github.com/xgfone/go-retry) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://raw.githubusercontent.com/xgfone/go-retry/master/LICENSE)
 
 The package supporting `Go1.7+` supplies some retry policies to call a function.
 
