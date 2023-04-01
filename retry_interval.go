@@ -1,4 +1,4 @@
-// Copyright 2021 xgfone
+// Copyright 2023 xgfone
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,47 +19,55 @@ import (
 	"time"
 )
 
-// NewIntervalRetry returns a new Retry to call it until the caller returns nil
-// or is called for number times.
+// NewPeriodicIntervalRetry returns a new retry to call a runner function
+// periodically until the context is done or it reaches the number.
 //
-// If number is equal to 0, it won't retry it.
-// If interval is 0, the caller will be called to retry immediately.
-func NewIntervalRetry(number int, interval time.Duration) Retry {
-	return intervalRetry{number: number, interval: interval}
+// number is the times to recall a function, which should be positive.
+// If 0 or negative, it does nothing.
+//
+// interval is the interval duration between two callings.
+// If 0, it immediately retries to call.
+func NewPeriodicIntervalRetry(number int, interval time.Duration) Retry {
+	return periodicIntervalRetry{Number: number, Interval: interval}
 }
 
-type intervalRetry struct {
-	interval time.Duration
-	number   int
+type periodicIntervalRetry struct {
+	Interval time.Duration
+	Number   int
 }
 
-func (r intervalRetry) Call(c context.Context, f Caller, a ...interface{}) (interface{}, error) {
-	result, err := f(c, a...)
-	for number := r.number; err != nil && number > 0; number-- {
-		if err == ErrEndRetry || waitForExit(c, r.interval) {
-			break
-		}
-		result, err = f(c, a...)
+func (r periodicIntervalRetry) Run(c context.Context, f func(context.Context) (bool, error)) error {
+	if r.Number < 1 {
+		panic("the retry number must be positive")
 	}
-	return result, err
-}
 
-func waitForExit(ctx context.Context, sleep time.Duration) (exit bool) {
-	if sleep > 0 {
-		timer := time.NewTimer(sleep)
+	var ok bool
+	var err error
+	for n := r.Number; n > 0; n-- {
 		select {
-		case <-timer.C:
-		case <-ctx.Done():
-			timer.Stop()
-			return true
-		}
-	} else {
-		select {
-		case <-ctx.Done():
-			return true
+		case <-c.Done():
+			return c.Err()
 		default:
 		}
+
+		if ok, err = f(c); ok || err == nil {
+			return err
+		}
+
+		if r.Interval > 0 {
+			t := time.NewTimer(r.Interval)
+			select {
+			case <-t.C:
+			case <-c.Done():
+				t.Stop()
+				select {
+				case <-t.C:
+				default:
+				}
+				return c.Err()
+			}
+		}
 	}
 
-	return false
+	return err
 }

@@ -1,4 +1,4 @@
-// Copyright 2021 xgfone
+// Copyright 2023 xgfone
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,26 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package retry implements some retry policies to call a function.
+// Package retry provides some retry policies to call a function.
 package retry
 
-import (
-	"context"
-	"errors"
-)
+import "context"
 
-// ErrEndRetry is used by the callee to end to retry.
-var ErrEndRetry = errors.New("end to retry")
-
-// Caller is the caller function.
-type Caller func(ctx context.Context, args ...interface{}) (result interface{}, err error)
-
-// Retry is used to retry a function call when it returns an error.
+// Retry is an interface to retry the function until a condition reaches.
 type Retry interface {
-	// Call calls the callee and returns its result, which will retry it
-	// when the caller returns the error.
-	//
-	// Notice: the callee maybe return ErrEndRetry to end to retry,
-	// and the implementation should support it.
-	Call(ctx context.Context, callee Caller, args ...interface{}) (result interface{}, err error)
+	// If f returns true or nil, it terminates retry.
+	Run(c context.Context, f func(context.Context) (success bool, err error)) error
 }
